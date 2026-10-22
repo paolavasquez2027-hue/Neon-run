@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#05010f" />
+    <meta
+      name="description"
+      content="NEON RUN 3D: corre, salta y recoge monedas en un mundo de plataformas flotantes de neón. Tres niveles, récords, sonidos y controles táctiles."
+    />
+    <title>NEON RUN 3D — Plataformas futuristas</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23070318'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%2300f0ff' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='3' fill='%23ff2ea6'/%3E%3C/svg%3E"
+    />
+    <script type="module" crossorigin src="./assets/index-72fyY0Od.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-Bq_EpN3N.css">
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="ui">
+      <!-- ================= HUD ================= -->
+      <div id="hud" class="hidden">
+        <div class="hud-row">
+          <div class="hud-block">
+            <div class="hud-label">NIVEL</div>
+            <div id="hud-level" class="hud-value">1</div>
+          </div>
+          <div class="hud-block">
+            <div class="hud-label">PUNTOS</div>
+            <div id="hud-score" class="hud-value">0</div>
+          </div>
+          <div class="hud-block">
+            <div class="hud-label">MONEDAS</div>
+            <div id="hud-coins" class="hud-value coins">0/0</div>
+          </div>
+          <div class="hud-block">
+            <div class="hud-label">TIEMPO</div>
+            <div id="hud-time" class="hud-value">0.0s</div>
+          </div>
+        </div>
+        <div id="hud-lives" class="hud-lives" aria-label="Vidas"></div>
+        <div class="hud-buttons">
+          <button id="btn-pause" class="icon-btn" type="button" title="Pausa (P / Esc)">❚❚</button>
+          <button id="btn-sound" class="icon-btn" type="button" title="Sonido (M)">🔊</button>
+          <button id="btn-mobile" class="icon-btn" type="button" title="Controles táctiles">📱</button>
+        </div>
+      </div>
+
+      <!-- ============ MENSAJES CENTRALES ============ -->
+      <div id="toast" class="toast hidden"></div>
+      <div id="countdown" class="countdown hidden">3</div>
+
+      <!-- ============== CONTROLES TÁCTILES ============== -->
+      <div id="touch" class="touch">
+        <div class="touch-left">
+          <button class="pad" data-dir="left" type="button">◀</button>
+          <button class="pad" data-dir="right" type="button">▶</button>
+        </div>
+        <div class="touch-right">
+          <button class="pad jump" data-dir="jump" type="button">▲</button>
+        </div>
+      </div>
+
+      <!-- ================== MENÚ PRINCIPAL ================== -->
+      <section id="screen-menu" class="screen">
+        <div class="panel">
+          <h1 class="logo">
+            <span class="l1">NEON</span><span class="l2">RUN</span><span class="l3">3D</span>
+          </h1>
+          <p class="tagline">
+            Salta entre plataformas flotantes, esquiva los obstáculos y recoge todas las monedas.
+          </p>
+
+          <div class="record-box">
+            <span>RÉCORD</span>
+            <strong id="menu-record">0</strong>
+            <em id="menu-record-level">—</em>
+          </div>
+
+          <div class="level-grid" id="level-select"></div>
+
+          <div class="actions">
+            <button id="btn-start" class="btn primary" type="button">▶ JUGAR</button>
+            <button id="btn-howto" class="btn" type="button">? INSTRUCCIONES</button>
+            <button id="btn-reset-record" class="btn ghost" type="button">🗑 BORRAR RÉCORD</button>
+          </div>
+
+          <p class="hint">
+            Teclado: <b>WASD</b> / <b>flechas</b> para moverte, <b>ESPACIO</b> para saltar,
+            <b>P</b> para pausar.
+          </p>
+        </div>
+      </section>
+
+      <!-- ================== INSTRUCCIONES ================== -->
+      <section id="screen-help" class="screen hidden">
+        <div class="panel">
+          <h2>INSTRUCCIONES</h2>
+          <div class="help-grid">
+            <div class="help-card">
+              <h3>🎮 Teclado</h3>
+              <ul>
+                <li><b>W A S D</b> o <b>flechas</b> — mover al personaje</li>
+                <li><b>ESPACIO</b> — saltar (dos veces = doble salto)</li>
+                <li><b>D</b> o <b>SHIFT</b> — avanzar a toda velocidad</li>
+                <li><b>W</b> — acelerar el avance</li>
+                <li><b>S</b> — frenar y retroceder</li>
+                <li><b>P</b> o <b>ESC</b> — pausa · <b>M</b> — sonido · <b>R</b> — reiniciar</li>
+              </ul>
+            </div>
+            <div class="help-card">
+              <h3>📱 Táctil</h3>
+              <ul>
+                <li>◀ ▶ — moverte de lado</li>
+                <li>▲ — saltar</li>
+                <li>Desliza el dedo sobre la pantalla para moverte y toca para saltar</li>
+              </ul>
+            </div>
+            <div class="help-card">
+              <h3>🎯 Objetivo</h3>
+              <ul>
+                <li>Recoge <b>monedas</b> (+10 puntos, el combo multiplica)</li>
+                <li>Las <b>gemas</b> valen +50 puntos</li>
+                <li>Los <b>corazones</b> dan una vida extra</li>
+                <li>Pisa el <b>portal verde</b> cuando se abra</li>
+                <li>Caerse al vacío, tocar pinchos o chocar con un obstáculo cuesta una vida</li>
+                <li>Los enemigos normales se pueden aplastar saltando sobre ellos</li>
+              </ul>
+            </div>
+            <div class="help-card">
+              <h3>🏆 Puntuación</h3>
+              <ul>
+                <li>Moneda: +10 (× combo, hasta ×5)</li>
+                <li>Gema: +50</li>
+                <li>Obstáculo destruido: +15 (× combo)</li>
+                <li>Nivel superado: +500 y bonus de tiempo</li>
+                <li>El récord se guarda en tu navegador</li>
+              </ul>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="btn-help-back" class="btn primary" type="button">← VOLVER</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== PAUSA ================== -->
+      <section id="screen-pause" class="screen hidden">
+        <div class="panel small">
+          <h2>PAUSA</h2>
+          <div class="stats" id="pause-stats"></div>
+          <div class="actions">
+            <button id="btn-resume" class="btn primary" type="button">▶ CONTINUAR</button>
+            <button id="btn-restart" class="btn" type="button">↺ REINICIAR NIVEL</button>
+            <button id="btn-pause-menu" class="btn ghost" type="button">🏠 MENÚ PRINCIPAL</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== NIVEL COMPLETADO ================== -->
+      <section id="screen-level-clear" class="screen hidden">
+        <div class="panel small">
+          <h2 class="win">¡NIVEL SUPERADO!</h2>
+          <div class="stats" id="levelclear-stats"></div>
+          <div class="actions">
+            <button id="btn-next" class="btn primary" type="button">▶ SIGUIENTE NIVEL</button>
+            <button id="btn-replay" class="btn" type="button">↺ REPETIR NIVEL</button>
+            <button id="btn-clear-menu" class="btn ghost" type="button">🏠 MENÚ</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== VICTORIA ================== -->
+      <section id="screen-win" class="screen hidden">
+        <div class="panel">
+          <h2 class="win">🏆 ¡VICTORIA TOTAL!</h2>
+          <p class="tagline">Has completado los tres niveles de NEON RUN 3D.</p>
+          <div class="stats" id="win-stats"></div>
+          <div class="actions">
+            <button id="btn-win-menu" class="btn primary" type="button">🏠 VOLVER AL MENÚ</button>
+            <button id="btn-win-replay" class="btn" type="button">↺ JUGAR DE NUEVO</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== DERROTA ================== -->
+      <section id="screen-gameover" class="screen hidden">
+        <div class="panel small">
+          <h2 class="lose">GAME OVER</h2>
+          <div class="stats" id="gameover-stats"></div>
+          <div class="actions">
+            <button id="btn-retry" class="btn primary" type="button">↺ REINTENTAR NIVEL</button>
+            <button id="btn-go-menu" class="btn ghost" type="button">🏠 MENÚ PRINCIPAL</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================== CARGA ================== -->
+      <div id="loading" class="screen">
+        <div class="panel small">
+          <h2>NEON RUN 3D</h2>
+          <div class="loader"><div class="loader-bar" id="loader-bar"></div></div>
+          <p class="hint" id="loading-text">Cargando motor 3D…</p>
+        </div>
+      </div>
+
+      <div id="fatal" class="screen hidden">
+        <div class="panel small">
+          <h2>ERROR</h2>
+          <p class="hint" id="fatal-text"></p>
+        </div>
+      </div>
+    </div>
+
+    <noscript>
+      <div class="screen">
+        <div class="panel small">
+          <h2>JAVASCRIPT DESACTIVADO</h2>
+          <p class="hint">NEON RUN 3D necesita JavaScript activado para funcionar.</p>
+        </div>
+      </div>
+    </noscript>
+
+  </body>
+</html>
