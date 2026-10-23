@@ -1,152 +1,360 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#ff8a3d">
-<title>Animal Kart 3D 🏁</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#05010f" />
+  <meta name="description" content="NEON RUN 3D: corre por una pista futurista, recoge monedas, activa el imán y cruza la meta antes de perder tus vidas." />
+  <title>NEON RUN 3D — Arcade Runner</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23050212'/%3E%3Cpath d='M12 44 26 16h12L24 44z' fill='%2300f0ff'/%3E%3Cpath d='m35 20 17 24H40L27 29z' fill='%23ff2bd6'/%3E%3Ccircle cx='32' cy='32' r='4' fill='%23ffe89a'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <canvas id="game-canvas" aria-label="Pista de carreras futurista en 3D"></canvas>
 
-<main class="game-wrap">
-
-  <!-- ================= ESCENARIO 3D ================= -->
-  <div class="stage" id="stage" aria-label="Animal Kart 3D, carrera de carritos">
-
-    <div id="sceneWrap"></div>
-
-    <!-- ---------- HUD de carrera ---------- -->
-    <div class="hud" id="hud" hidden>
-      <div class="hud-left">
-        <div class="rank-badge" id="rankBadge">1<span>º</span></div>
-        <div class="hud-meta">
-          <div class="time-pill">⏱ <span id="timeValue">0,0</span>s</div>
-          <div class="speed-pill" id="speedPill">🏁 <span id="speedValue">16</span> km/h</div>
-        </div>
-      </div>
-      <div class="coin-pill" id="coinPill" aria-label="Monedas recogidas">🪙 <span id="coinValue">0</span></div>
-      <button class="icon-btn" id="soundBtn" type="button" aria-label="Activar o silenciar sonido">🔊</button>
-    </div>
-
-    <!-- barra de progreso con los4 corredores -->
-    <div class="race-progress" id="raceProgress" hidden>
-      <div class="rp-track">
-        <div class="rp-fill" id="rpFill"></div>
-        <span class="rp-finish">🏁</span>
-        <div class="rp-marks" id="rpMarks"></div>
-      </div>
-      <div class="rp-labels">
-        <span class="rp-you" id="rpYou">Tú</span>
-        <span class="rp-goal">Meta</span>
-      </div>
-    </div>
-
-    <p class="hint" id="hint">← → carril · ↑ acelerar · ↓ frenar · ESPACIO saltar</p>
-    <div class="flash" id="flash"></div>
-
-    <!-- ---------- Cuenta regresiva ---------- -->
-    <div class="countdown" id="countdown" hidden><span id="countNum">3</span></div>
-
-    <!-- ================= SELECCIÓN DE PERSONAJE ================= -->
-    <section class="screen is-visible" id="menuScreen">
-      <div class="card card-menu">
-        <h1>Animal <span>Kart</span> 3D</h1>
-        <p class="subtitle">Elige tu animal y corre con su carrito hasta la meta. Esquiva rocas, bambúes y
-          manchas de aceite, y adelanta a los3 rivales para llegar <b>primero</b>.</p>
-
-        <div class="char-grid" id="charGrid">
-          <button class="char-card" data-char="panda" type="button">
-            <span class="char-emoji">🐼</span>
-            <span class="char-name">Panda</span>
-          </button>
-          <button class="char-card" data-char="turtle" type="button">
-            <span class="char-emoji">🐢</span>
-            <span class="char-name">Tortuga</span>
-          </button>
-          <button class="char-card" data-char="lion" type="button">
-            <span class="char-emoji">🦁</span>
-            <span class="char-name">León</span>
-          </button>
-          <button class="char-card" data-char="fox" type="button">
-            <span class="char-emoji">🦊</span>
-            <span class="char-name">Zorro</span>
-          </button>
-        </div>
-
-        <p class="keys">
-          <span class="key">←</span><span class="key">→</span> carril &nbsp;
-          <span class="key">↑</span> acelerar &nbsp;
-          <span class="key">↓</span> frenar &nbsp;
-          <span class="key">ESPACIO</span> saltar
-        </p>
-        <p class="record-line" id="startRecord"></p>
-        <p class="load-error" id="loadError">⚠️ No se pudo cargar Three.js. Comprueba tu conexión
-          a internet (la primera vez necesita descargar la librería).</p>
-        <button class="btn btn-play" id="playBtn" type="button" disabled>🏁 ¡Correr!</button>
-      </div>
-    </section>
-
-    <!-- ================= VICTORIA ================= -->
-    <section class="screen" id="winScreen">
-      <div class="card card-win">
-        <div class="big-emoji">🏆</div>
-        <h2 class="win-title">¡Victoria!</h2>
-        <p class="subtitle" id="winText">¡Tu animal ha llegado el primero a la meta!</p>
-        <div class="stats">
-          <div class="stat"><span>1º</span><small>lugar</small></div>
-          <div class="stat"><span id="winTime">0,0 s</span><small>tiempo</small></div>
-          <div class="stat"><span id="winCoins">0</span><small>🪙 monedas</small></div>
-          <div class="stat"><span id="winChar">🐼</span><small>personaje</small></div>
-        </div>
-        <div class="btn-row">
-          <button class="btn" id="againBtn" type="button">🔄 Volver a jugar</button>
-          <button class="btn btn-ghost" id="winMenuBtn" type="button">🎭 Cambiar personaje</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ================= RESULTADO (2º-4º) ================= -->
-    <section class="screen" id="resultScreen">
-      <div class="card card-result">
-        <div class="big-emoji" id="resultEmoji">🥈</div>
-        <h2 id="resultTitle">¡Terminaste2º!</h2>
-        <p class="subtitle" id="resultText">Casi lo logras. ¡Inténtalo de nuevo!</p>
-        <div class="stats">
-          <div class="stat"><span id="resultPlace">2º</span><small>lugar</small></div>
-          <div class="stat"><span id="resultTime">0,0 s</span><small>tiempo</small></div>
-          <div class="stat"><span id="resultCoins">0</span><small>🪙 monedas</small></div>
-          <div class="stat"><span id="resultChar">🐼</span><small>personaje</small></div>
-        </div>
-        <div class="btn-row">
-          <button class="btn" id="retryBtn" type="button">🔄 Volver a jugar</button>
-          <button class="btn btn-ghost" id="resultMenuBtn" type="button">🎭 Cambiar personaje</button>
-        </div>
-      </div>
-    </section>
-
-    <div class="confetti" id="confetti"></div>
+  <div class="fx-overlay" aria-hidden="true">
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+    <div class="screen-glow"></div>
+    <div id="damage-flash" class="damage-flash"></div>
   </div>
 
-  <p class="page-hint">Animal Kart 3D · HTML + CSS + JavaScript con Three.js</p>
-</main>
+  <main id="ui">
+    <section id="hud" class="hud is-hidden" aria-label="Interfaz de juego">
+      <header class="hud-top">
+        <div class="hud-left">
+          <div class="brand-mini" aria-label="Neon Run 3D">
+            <span class="brand-mark"></span>
+            <span class="brand-word">NEON<em>RUN</em></span>
+          </div>
+          <div class="lives-panel">
+            <span class="hud-label">VIDAS</span>
+            <div id="lives" class="lives" aria-live="polite"></div>
+          </div>
+        </div>
 
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
-  }
-}
-</script>
-<script type="module" src="script.js"></script>
-<script>
-  /* Aviso amable si la librería3D no llega a cargar */
-  setTimeout(function(){
-    if (!window.__panda3dReady){
-      var el = document.getElementById('loadError');
-      if (el) el.style.display = 'block';
-    }
-  }, 7000);
-</script>
+        <div class="progress-panel">
+          <div class="level-line">
+            <span class="level-badge"><span class="hud-label">NIVEL</span><strong id="hud-level">1 / 3</strong></span>
+            <span id="hud-level-name" class="level-name">CIUDAD NEÓN</span>
+          </div>
+          <div class="progress-caption">
+            <span class="hud-label">PROGRESO DE NIVEL</span>
+            <span id="progress-percent" class="progress-percent">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-grid"></div>
+            <div id="progress-fill" class="progress-fill"></div>
+            <span id="progress-runner" class="progress-runner"></span>
+          </div>
+        </div>
+
+        <div class="hud-right">
+          <div class="hud-stat">
+            <span class="hud-label">PUNTOS</span>
+            <strong id="hud-score" class="hud-value">0</strong>
+          </div>
+          <div class="hud-stat coin-stat">
+            <span class="coin-icon" aria-hidden="true"></span>
+            <div>
+              <span class="hud-label">MONEDAS</span>
+              <strong id="hud-coins" class="hud-value">0</strong>
+            </div>
+          </div>
+          <div class="hud-actions">
+            <button id="btn-sound" class="icon-btn" type="button" aria-label="Silenciar sonido" title="Sonido (M)">
+              <span id="sound-icon">♪</span>
+            </button>
+            <button id="btn-pause" class="icon-btn" type="button" aria-label="Pausa" title="Pausa (P / Esc)">❚❚</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="hud-bottom">
+        <div class="speed-panel">
+          <div class="speed-readout">
+            <span id="hud-speed" class="speed-value">0</span>
+            <span class="speed-unit">KM/H</span>
+          </div>
+          <div class="speed-bar"><span id="speed-fill"></span></div>
+          <div class="speed-hint"><b>↑</b> ACELERA <b>↓</b> FRENA</div>
+        </div>
+
+        <div id="powerup-badge" class="powerup-badge is-hidden">
+          <span class="magnet-glyph" aria-hidden="true"><i></i></span>
+          <span><b>IMÁN NEÓN</b><small id="powerup-time">8.0s</small></span>
+        </div>
+
+        <div class="hud-distance">
+          <span class="hud-label">DISTANCIA</span>
+          <strong id="hud-distance">0 m</strong>
+        </div>
+
+        <div id="combo" class="combo is-hidden">
+          <span>COMBO</span>
+          <strong>x<span id="combo-value">2</span></strong>
+        </div>
+      </div>
+
+      <div class="desktop-hint">
+        <span><kbd>←</kbd><kbd>→</kbd> CARRIL</span>
+        <span><kbd>↑</kbd><kbd>↓</kbd> VELOCIDAD</span>
+        <span><kbd>ESPACIO</kbd> SALTO</span>
+      </div>
+    </section>
+
+    <div id="countdown" class="countdown is-hidden" aria-live="assertive"></div>
+    <div id="toast" class="toast is-hidden" role="status"></div>
+
+    <div id="touch-actions" class="touch-actions" aria-label="Controles táctiles">
+      <div class="touch-group">
+        <button class="touch-btn" data-action="left" type="button" aria-label="Carril izquierdo">‹</button>
+        <button class="touch-btn" data-action="right" type="button" aria-label="Carril derecho">›</button>
+      </div>
+      <div class="touch-group touch-vertical">
+        <button class="touch-btn touch-small" data-action="boost" type="button" aria-label="Acelerar">↑</button>
+        <button class="touch-btn touch-small" data-action="brake" type="button" aria-label="Frenar">↓</button>
+      </div>
+      <button class="touch-btn touch-jump" data-action="jump" type="button" aria-label="Saltar">SALTO</button>
+    </div>
+
+    <section id="screen-menu" class="screen menu-screen" aria-label="Menú principal">
+      <div class="menu-side">
+        <div class="menu-kicker"><span></span> ARCADE RUNNER · SECTOR 2088 <span></span></div>
+        <h1 class="logo">
+          <span class="logo-neon">NEON</span>
+          <span class="logo-run">RUN</span>
+          <span class="logo-3d">3D</span>
+        </h1>
+        <p class="menu-tagline">CORRE · ESQUIVA · SALTA · SOBREVIVE</p>
+        <p class="menu-subtitle">Tres niveles, una sola carrera. Recoge monedas, activa el imán y cruza las tres metas sin perder tus vidas.</p>
+
+        <div class="menu-record">
+          <div class="record-item">
+            <span>MEJOR PUNTAJE</span>
+            <strong id="best-score">000000</strong>
+          </div>
+          <div class="record-divider"></div>
+          <div class="record-item">
+            <span>MONEDAS RÉCORD</span>
+            <strong id="best-coins">00</strong>
+          </div>
+        </div>
+
+        <div class="menu-actions">
+          <button id="btn-start" class="btn btn-primary btn-large" type="button">
+            <span class="btn-play" aria-hidden="true">▶</span>
+            <span>INICIAR JUEGO</span>
+            <span class="btn-arrow" aria-hidden="true">→</span>
+          </button>
+          <button id="btn-howto" class="btn btn-ghost" type="button">
+            <span aria-hidden="true">?</span> CÓMO JUGAR
+          </button>
+        </div>
+
+        <div class="menu-controls">
+          <span><kbd>←</kbd><kbd>→</kbd> CAMBIAR CARRIL</span>
+          <span><kbd>↑</kbd><kbd>↓</kbd> VELOCIDAD</span>
+          <span><kbd>ESPACIO</kbd> SALTAR</span>
+        </div>
+      </div>
+
+      <div class="menu-rail" aria-hidden="true">
+        <span class="rail-label">NEON GRID // ONLINE</span>
+        <span class="rail-line"></span>
+        <span class="rail-coords">X 03.6 · Y 00.0 · Z ∞</span>
+      </div>
+
+      <div class="menu-corner menu-corner-tl" aria-hidden="true"></div>
+      <div class="menu-corner menu-corner-br" aria-hidden="true"></div>
+      <div class="menu-bottom" aria-hidden="true">
+        <span>WEBGL ENGINE</span>
+        <span class="menu-bottom-line"></span>
+        <span>3 CARRILES · 3 NIVELES · 3 VIDAS</span>
+      </div>
+    </section>
+
+    <section id="screen-help" class="screen overlay-screen is-hidden" aria-label="Cómo jugar">
+      <div class="panel help-panel">
+        <button id="btn-help-close" class="close-btn" type="button" aria-label="Cerrar">×</button>
+        <div class="panel-kicker">MANUAL DE SUPERVIVENCIA</div>
+        <h2 class="panel-title">CÓMO <em>JUGAR</em></h2>
+        <div class="help-grid">
+          <article class="help-card">
+            <span class="help-number">01</span>
+            <h3>CONTROLES</h3>
+            <ul>
+              <li><kbd>←</kbd><kbd>→</kbd> Cambiar de carril</li>
+              <li><kbd>↑</kbd> Acelerar · <kbd>↓</kbd> Frenar</li>
+              <li><kbd>ESPACIO</kbd> Saltar barreras</li>
+              <li><kbd>P</kbd> Pausa · <kbd>M</kbd> Sonido · <kbd>R</kbd> Reiniciar</li>
+            </ul>
+          </article>
+          <article class="help-card">
+            <span class="help-number">02</span>
+            <h3>OBJETIVO</h3>
+            <ul>
+              <li>Recoge <b class="text-gold">monedas doradas</b> para sumar puntos.</li>
+              <li>Coge el <b class="text-cyan">imán neón</b> y atrae monedas cercanas.</li>
+              <li>Salta las <b class="text-pink">vallas bajas</b> y esquiva los <b class="text-pink">muros altos</b> del Nivel 3.</li>
+              <li>Llega a la meta antes de quedarte sin vidas.</li>
+            </ul>
+          </article>
+          <article class="help-card">
+            <span class="help-number">03</span>
+            <h3>REGLAS</h3>
+            <ul>
+              <li>Empiezas con <b>3 vidas</b>.</li>
+              <li>Supera los <b>3 niveles</b> para ganar.</li>
+              <li>Cada choque resta una vida y frena tu avance.</li>
+              <li>Los combos multiplican el valor de las monedas.</li>
+              <li>Si pierdes las 3 vidas: fin de la partida.</li>
+            </ul>
+          </article>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-help-start" class="btn btn-primary" type="button">INICIAR AHORA <span aria-hidden="true">→</span></button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-pause" class="screen overlay-screen is-hidden" aria-label="Juego en pausa">
+      <div class="panel pause-panel">
+        <div class="panel-kicker">SISTEMA EN ESPERA</div>
+        <h2 class="panel-title">PAUSA</h2>
+        <p class="panel-copy">La pista sigue brillando. Tómate un segundo.</p>
+        <div class="mini-stats">
+          <div><span>PUNTOS</span><strong id="pause-score">0</strong></div>
+          <div><span>MONEDAS</span><strong id="pause-coins">0</strong></div>
+          <div><span>DISTANCIA</span><strong id="pause-distance">0 m</strong></div>
+        </div>
+        <div class="panel-actions column">
+          <button id="btn-resume" class="btn btn-primary" type="button">CONTINUAR <span aria-hidden="true">▶</span></button>
+          <button id="btn-pause-restart" class="btn btn-ghost" type="button">REINICIAR CARRERA</button>
+          <button id="btn-pause-menu" class="btn btn-quiet" type="button">VOLVER AL MENÚ</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-level" class="screen overlay-screen result-screen level-screen is-hidden" aria-label="Nivel completado">
+      <div class="panel result-panel level-panel">
+        <div class="result-burst" aria-hidden="true"></div>
+        <div class="result-emblem level-emblem" aria-hidden="true">
+          <span class="emblem-ring"></span>
+          <span class="emblem-core">◆</span>
+        </div>
+        <div class="panel-kicker">SECTOR SUPERADO · SALTO DE NIVEL</div>
+        <h2 class="panel-title result-title level-title">¡NIVEL <span id="level-complete-number">1</span> COMPLETADO!</h2>
+        <p id="level-transition-copy" class="panel-copy level-transition-copy">Preparando Nivel 2...</p>
+        <div id="level-steps" class="level-steps" aria-hidden="true">
+          <span class="level-step"><b>1</b><em>CIUDAD</em></span>
+          <span class="level-step"><b>2</b><em>AVANZADA</em></span>
+          <span class="level-step"><b>3</b><em>FINAL</em></span>
+        </div>
+        <div class="final-score">
+          <span>PUNTUACIÓN ACUMULADA</span>
+          <strong id="level-score">0</strong>
+        </div>
+        <div class="result-stats">
+          <div><span>MONEDAS</span><strong id="level-coins">0</strong></div>
+          <div><span>VIDAS</span><strong id="level-lives">3 / 3</strong></div>
+          <div><span>NIVEL</span><strong id="level-position">1 / 3</strong></div>
+          <div><span>TIEMPO</span><strong id="level-time">00:00</strong></div>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-next-level" class="btn btn-primary" type="button">SIGUIENTE NIVEL <span aria-hidden="true">→</span></button>
+          <button id="btn-level-menu" class="btn btn-ghost" type="button">MENÚ PRINCIPAL</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-victory" class="screen overlay-screen result-screen victory-screen is-hidden" aria-label="Victoria">
+      <div class="victory-fireworks" aria-hidden="true">
+        <i style="--x:8%;--y:18%;--c:var(--cyan);--d:0s;--dur:2.6s"></i>
+        <i style="--x:84%;--y:14%;--c:var(--pink);--d:.35s;--dur:3s"></i>
+        <i style="--x:16%;--y:72%;--c:var(--gold);--d:.8s;--dur:2.8s"></i>
+        <i style="--x:88%;--y:66%;--c:var(--cyan);--d:1.1s;--dur:2.4s"></i>
+        <i style="--x:48%;--y:8%;--c:var(--pink);--d:1.45s;--dur:3.2s"></i>
+        <i style="--x:68%;--y:82%;--c:var(--gold);--d:1.8s;--dur:2.7s"></i>
+      </div>
+      <div class="panel result-panel victory-panel">
+        <div class="result-burst" aria-hidden="true"></div>
+        <div class="achievement-badge" role="img" aria-label="Insignia Neón Legendaria">
+          <div class="badge-medal">
+            <span class="badge-ring" aria-hidden="true"></span>
+            <span class="badge-core"><b>★</b><small>LEGENDARIO</small></span>
+            <span class="badge-shine" aria-hidden="true"></span>
+          </div>
+        </div>
+        <div class="panel-kicker">LOGRO DESBLOQUEADO · 3 NIVELES COMPLETADOS</div>
+        <h2 class="panel-title result-title victory-title">¡CIUDAD NEÓN SUPERADA!</h2>
+        <p id="victory-copy" class="panel-copy">¡Felicidades, has superado la ciudad neón!</p>
+        <p class="achievement-copy">¡Felicidades! Has desbloqueado la <b>Insignia Neón Legendaria</b> por completar los 3 Niveles.</p>
+        <div class="final-score">
+          <span>PUNTUACIÓN FINAL</span>
+          <strong id="victory-score">0</strong>
+          <em id="victory-record" class="new-record is-hidden">NUEVO RÉCORD</em>
+        </div>
+        <div class="result-stats">
+          <div><span>MONEDAS</span><strong id="victory-coins">0</strong></div>
+          <div><span>PUNT. MÁXIMA</span><strong id="victory-best">0</strong></div>
+          <div><span>TIEMPO</span><strong id="victory-time">00:00</strong></div>
+          <div><span>VIDAS</span><strong id="victory-lives">3 / 3</strong></div>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-victory-again" class="btn btn-primary" type="button">JUGAR DE NUEVO <span aria-hidden="true">↻</span></button>
+          <button id="btn-victory-menu" class="btn btn-ghost" type="button">MENÚ PRINCIPAL</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-defeat" class="screen overlay-screen result-screen is-hidden" aria-label="Juego terminado">
+      <div class="panel result-panel defeat-panel">
+        <div class="result-emblem defeat-emblem" aria-hidden="true">
+          <span class="emblem-ring"></span>
+          <span class="emblem-core">×</span>
+        </div>
+        <div class="panel-kicker">SEÑAL PERDIDA · SISTEMA CRÍTICO</div>
+        <h2 class="panel-title result-title defeat-title">JUEGO TERMINADO</h2>
+        <p class="panel-copy">La pista pudo contigo esta vez. Vuelve a intentarlo.</p>
+        <div class="final-score defeat-score">
+          <span>PUNTAJE FINAL</span>
+          <strong id="defeat-score">0</strong>
+          <em id="defeat-record" class="new-record is-hidden">NUEVO RÉCORD</em>
+        </div>
+        <div class="result-stats">
+          <div><span>MONEDAS</span><strong id="defeat-coins">0</strong></div>
+          <div><span>DISTANCIA</span><strong id="defeat-distance">0 m</strong></div>
+          <div><span>MEJOR</span><strong id="defeat-best">0</strong></div>
+          <div><span>NIVEL</span><strong id="defeat-level">1 / 3</strong></div>
+        </div>
+        <div class="panel-actions">
+          <button id="btn-defeat-retry" class="btn btn-primary" type="button">REINICIAR CARRERA <span aria-hidden="true">↻</span></button>
+          <button id="btn-defeat-menu" class="btn btn-ghost" type="button">MENÚ PRINCIPAL</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-loading" class="screen loading-screen" aria-label="Cargando">
+      <div class="loading-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <div class="loading-logo">NEON <em>RUN</em> 3D</div>
+      <div class="loading-bar"><span id="loading-fill"></span></div>
+      <p id="loading-text">CALIBRANDO MOTOR 3D…</p>
+    </section>
+
+    <section id="screen-fatal" class="screen loading-screen is-hidden" aria-label="Error">
+      <div class="panel">
+        <div class="panel-kicker">ERROR DEL SISTEMA</div>
+        <h2 class="panel-title">WEBGL NO DISPONIBLE</h2>
+        <p id="fatal-msg" class="panel-copy">Tu navegador no puede iniciar el motor 3D. Activa la aceleración por hardware o prueba con Chrome, Edge o Firefox actualizado.</p>
+      </div>
+    </section>
+  </main>
+
+  <noscript>
+    <div class="noscript">NEON RUN 3D necesita JavaScript activado para funcionar.</div>
+  </noscript>
+
+  <script src="script.js" defer></script>
 </body>
 </html>
